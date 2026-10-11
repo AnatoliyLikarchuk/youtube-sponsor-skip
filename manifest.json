@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Sponsor Skip (Jev)",
+  "version": "0.1.0",
+  "description": "Skips paid sponsor reads in Russian YouTube videos using Jev decisions.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://www.youtube.com/*", "https://openrouter.ai/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "content_scripts": [
+    { "matches": ["https://www.youtube.com/*"], "js": ["page-hook.js"], "world": "MAIN", "run_at": "document_start" },
+    { "matches": ["https://www.youtube.com/*"], "js": ["content.js"], "run_at": "document_idle" }
+  ],
+  "web_accessible_resources": [{ "resources": ["lib/skipper.js"], "matches": ["https://www.youtube.com/*"] }],
+  "options_page": "options.html",
+  "action": { "default_title": "Sponsor Skip", "default_popup": "popup.html" }
+}

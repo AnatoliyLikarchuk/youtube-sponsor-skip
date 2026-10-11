@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Sponsor Skip</title>
+<style>
+  body { font: 14px system-ui, sans-serif; margin: 0; padding: 14px 16px; width: 280px; color: #0f0f0f; background: #fff; }
+  h1 { font-size: 13px; font-weight: 600; margin: 0 0 10px; color: #606060; }
+  #headline { font-size: 15px; font-weight: 600; margin: 0 0 8px; }
+  ul { list-style: none; margin: 0 0 12px; padding: 0; }
+  li button { width: 100%; text-align: left; border: 0; background: #f2f2f2; border-radius: 6px; padding: 6px 10px; margin: 0 0 4px; font: inherit; cursor: pointer; }
+  li button:hover { background: #e5e5e5; }
+  #pause { width: 100%; padding: 9px; border: 0; border-radius: 18px; font: 600 14px system-ui, sans-serif; cursor: pointer; background: #0f0f0f; color: #fff; }
+  #pause.paused { background: #065fd4; }
+  footer { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: #606060; }
+  a { color: #065fd4; text-decoration: none; cursor: pointer; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #212121; color: #f1f1f1; }
+    h1, footer { color: #aaa; }
+    li button { background: #3a3a3a; color: #f1f1f1; }
+    li button:hover { background: #4a4a4a; }
+    #pause { background: #f1f1f1; color: #0f0f0f; }
+    #pause.paused { background: #3ea6ff; color: #0f0f0f; }
+    a { color: #3ea6ff; }
+  }
+</style></head>
+<body>
+<h1>Sponsor Skip (Jev)</h1>
+<p id="headline">…</p>
+<ul id="items"></ul>
+<button id="pause"></button>
+<footer><span id="spend"></span><a id="options">Настройки</a></footer>
+<script type="module" src="popup.js"></script>
+</body></html>

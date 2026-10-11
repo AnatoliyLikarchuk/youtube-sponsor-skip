@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>Sponsor Skip — настройки</title>
+<style>body{font:14px system-ui;margin:24px;max-width:560px}label{display:block;margin:12px 0}input[type=number]{width:90px}#status{color:#b00}table{border-collapse:collapse;margin-top:8px}td{padding:2px 12px 2px 0}</style></head>
+<body>
+<h1>Sponsor Skip (Jev)</h1>
+<p id="status"></p>
+<label>Ключ OpenRouter (<span id="keyState"></span>)<br><input id="key" type="password" autocomplete="off" placeholder="sk-or-…" size="40"></label>
+<label>Дневной лимит, $ <input id="limit" type="number" min="0.02" step="0.01"></label>
+<label>Порог p(sponsor) <input id="threshold" type="number" min="0.05" max="0.95" step="0.05"></label>
+<label><input id="autoSkip" type="checkbox"> Перематывать автоматически (иначе только предлагать)</label>
+<button id="save">Сохранить</button> <button id="enable" hidden>Включить снова</button> <button id="clearCache">Очистить кэш</button>
+<h2>Расходы за 7 дней</h2><table id="spend"></table>
+<script type="module" src="options.js"></script>
+</body></html>
