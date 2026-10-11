@@ -13,6 +13,7 @@ for f in manifest.json background.js content.js page-hook.js popup.html popup.js
   cp "$root/$f" ext/
 done
 cp "$root"/lib/*.js ext/lib/
+mkdir -p ext/icons && cp "$root"/icons/*.png ext/icons/
 
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 # Ad-hoc signature ("Sign to Run Locally"): needs Safari's "Allow unsigned extensions".

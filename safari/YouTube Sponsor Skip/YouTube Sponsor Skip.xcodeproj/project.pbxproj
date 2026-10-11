@@ -23,6 +23,7 @@
 		1C093391307BCFE3003E5481 /* options.js in Resources */ = {isa = PBXBuildFile; fileRef = 1C093388307BCFE3003E5481 /* options.js */; };
 		1C093392307BCFE3003E5481 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 1C093389307BCFE3003E5481 /* manifest.json */; };
 		1C093393307BCFE3003E5481 /* lib in Resources */ = {isa = PBXBuildFile; fileRef = 1C09338A307BCFE3003E5481 /* lib */; };
+		AA0000000000000000000002 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000001 /* icons */; };
 		1C093394307BCFE3003E5481 /* page-hook.js in Resources */ = {isa = PBXBuildFile; fileRef = 1C09338B307BCFE3003E5481 /* page-hook.js */; };
 		1C093395307BCFE3003E5481 /* options.html in Resources */ = {isa = PBXBuildFile; fileRef = 1C09338C307BCFE3003E5481 /* options.html */; };
 		1C093396307BCFE3003E5481 /* content.js in Resources */ = {isa = PBXBuildFile; fileRef = 1C09338D307BCFE3003E5481 /* content.js */; };
@@ -70,6 +71,7 @@
 		1C093388307BCFE3003E5481 /* options.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = options.js; path = ../../ext/options.js; sourceTree = "<group>"; };
 		1C093389307BCFE3003E5481 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../ext/manifest.json; sourceTree = "<group>"; };
 		1C09338A307BCFE3003E5481 /* lib */ = {isa = PBXFileReference; lastKnownFileType = folder; name = lib; path = ../../ext/lib; sourceTree = "<group>"; };
+		AA0000000000000000000001 /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = icons; path = ../../ext/icons; sourceTree = "<group>"; };
 		1C09338B307BCFE3003E5481 /* page-hook.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "page-hook.js"; path = "../../ext/page-hook.js"; sourceTree = "<group>"; };
 		1C09338C307BCFE3003E5481 /* options.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = options.html; path = ../../ext/options.html; sourceTree = "<group>"; };
 		1C09338D307BCFE3003E5481 /* content.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = content.js; path = ../../ext/content.js; sourceTree = "<group>"; };
@@ -150,6 +152,7 @@
 				1C093388307BCFE3003E5481 /* options.js */,
 				1C093389307BCFE3003E5481 /* manifest.json */,
 				1C09338A307BCFE3003E5481 /* lib */,
+				AA0000000000000000000001 /* icons */,
 				1C09338B307BCFE3003E5481 /* page-hook.js */,
 				1C09338C307BCFE3003E5481 /* options.html */,
 				1C09338D307BCFE3003E5481 /* content.js */,
@@ -249,6 +252,7 @@
 			isa = PBXResourcesBuildPhase;
 			files = (
 				1C093393307BCFE3003E5481 /* lib in Resources */,
+				AA0000000000000000000002 /* icons in Resources */,
 				1C09338F307BCFE3003E5481 /* background.js in Resources */,
 				1C093391307BCFE3003E5481 /* options.js in Resources */,
 				1C093395307BCFE3003E5481 /* options.html in Resources */,
