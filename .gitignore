@@ -2,3 +2,7 @@
 eval-ledger.json
 .DS_Store
 node_modules/
+safari/build/
+safari/ext/
+safari/build.log
+xcuserdata/

@@ -12,7 +12,8 @@ import { once } from './lib/once.js';
 import { summarize } from './lib/summary.js';
 
 // Spec §4: content scripts must never be able to read the key from storage.
-chrome.storage.local.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' }).catch(() => {});
+// Chrome-only API; Safari lacks it, and a sync TypeError here would kill the whole service worker.
+chrome.storage.local.setAccessLevel?.({ accessLevel: 'TRUSTED_CONTEXTS' })?.catch(() => {});
 
 const store = createStore(chrome.storage.local);
 const CACHE_VERSION = `${PROMPT_VERSION}|${EXPECTED_MODEL}`;
