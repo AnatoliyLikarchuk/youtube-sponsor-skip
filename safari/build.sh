@@ -16,9 +16,23 @@ cp "$root"/lib/*.js ext/lib/
 mkdir -p ext/icons && cp "$root"/icons/*.png ext/icons/
 
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
-# Ad-hoc signature ("Sign to Run Locally"): needs Safari's "Allow unsigned extensions".
+# With an "Apple Development" certificate in the keychain (a free Apple ID is enough) the app is signed
+# with it, and Safari keeps the extension across restarts without "Allow unsigned extensions". Without
+# one it falls back to an ad-hoc signature ("Sign to Run Locally"): then the unsigned toggle is needed
+# after every Safari restart, followed by reenable.sh. TEAM_ID / SIGN_IDENTITY override the detection.
+if [ -z "${SIGN_IDENTITY:-}" ] && security find-identity -v -p codesigning | grep -q '"Apple Development'; then
+  SIGN_IDENTITY="Apple Development"
+fi
+identity="${SIGN_IDENTITY:--}"
+team=
+if [ "$identity" != "-" ]; then
+  team="${TEAM_ID:-$(security find-certificate -c "$identity" -p | openssl x509 -noout -subject -nameopt multiline \
+    | awk -F' = ' '/organizationalUnitName/{print $2; exit}')}"
+fi
+echo "Signing: identity=$identity team=${team:-none}"
 xcodebuild -project "YouTube Sponsor Skip/YouTube Sponsor Skip.xcodeproj" -scheme "YouTube Sponsor Skip" \
-  -configuration Release -derivedDataPath build CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= \
+  -configuration Release -derivedDataPath build CODE_SIGN_IDENTITY="$identity" CODE_SIGN_STYLE=Manual \
+  DEVELOPMENT_TEAM="$team" PROVISIONING_PROFILE_SPECIFIER= \
   build -quiet
 
 # Install outside the build folder so Safari keeps the extension when build/ is cleaned; then drop the
