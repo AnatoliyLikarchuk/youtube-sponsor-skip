@@ -16,6 +16,8 @@ function show(view) {
   $('pause').textContent = view.pauseLabel;
   $('pause').classList.toggle('paused', view.paused);
   $('spend').textContent = view.spend;
+  $('reserve').textContent = view.reserve;
+  $('reserve').hidden = !view.reserve;
 }
 
 $('pause').onclick = async () => show(await chrome.runtime.sendMessage({ type: 'togglePause', tabId: tab.id }));

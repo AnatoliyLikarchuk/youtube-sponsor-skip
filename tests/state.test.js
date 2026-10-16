@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { reserve, settle, markFailed, spentOn, spentByDay, today, BudgetExceeded, RESERVE_USD } from '../lib/budget.js';
+import { reserve, settle, markFailed, spentOn, heldOn, spentByDay, today, BudgetExceeded, RESERVE_USD } from '../lib/budget.js';
 import { getEntry, putEntry } from '../lib/cache.js';
 
 const day = '2026-10-11';
@@ -21,6 +21,20 @@ test('unknown cost and failures keep the reservation; entries are never removed'
   assert.equal(l.entries.length, 2);
   assert.equal(spentOn(l, day), 2 * RESERVE_USD);
   assert.deepEqual(l.entries.map((e) => e.status), ['reserved', 'failed']);
+});
+
+test('heldOn counts only reservations whose real cost never came back', () => {
+  let l = { entries: [] };
+  for (const id of ['ok', 'gone', 'flight', 'refused', 'odd']) l = reserve(l, { id, day, limitUsd: 1 });
+  l = settle(l, 'ok', 0.0006);
+  l = markFailed(l, 'gone', 'Load failed');
+  l = settle(markFailed(l, 'refused', 'http_451'), 'refused', 0);
+  l = settle(markFailed(l, 'odd', 'invalid_response:c001'), 'odd', 0.02); // a real cost equal to the reserve is still real
+  assert.equal(heldOn(l, day), 2 * RESERVE_USD); // 'gone' + 'flight'
+  assert.equal(spentOn(l, day), 0.0606); // the limit still counts the held ones
+  // Ledgers written before 'known' existed: a failed entry still at the reserve is unconfirmed, one at 0 was settled.
+  const legacy = { entries: [{ id: 'x', day, status: 'failed', chargedUsd: RESERVE_USD }, { id: 'y', day, status: 'failed', chargedUsd: 0 }] };
+  assert.equal(heldOn(legacy, day), RESERVE_USD);
 });
 
 test('reserve refuses when in-flight reservations would cross the limit', () => {

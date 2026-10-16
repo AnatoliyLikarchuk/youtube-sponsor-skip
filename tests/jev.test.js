@@ -43,6 +43,10 @@ test('callJev returns probs and cost, sends bearer key', async () => {
 
 test('callJev throws on HTTP error and on model mismatch with cost', async () => {
   await assert.rejects(callJev({ questions }, { key: 'k', fetchImpl: fakeFetch(429, {}) }), /http_429/);
+  const text451 = async () => ({ ok: false, status: 451, text: async () => JSON.stringify({ error: { message: 'Region not supported', code: 451 } }) });
+  await assert.rejects(callJev({ questions }, { key: 'k', fetchImpl: text451 }), (e) => e.status === 451 && e.message === 'http_451: Region not supported');
+  const broken = { ...ok, answers: { c000: answer(0.9) } };
+  await assert.rejects(callJev({ questions }, { key: 'k', fetchImpl: fakeFetch(200, broken) }), (e) => /invalid_response/.test(e.message) && e.cost === 0.0007);
   const other = { ...ok, model: 'typesafe/jev-1.14-20261101' };
   await assert.rejects(callJev({ questions }, { key: 'k', fetchImpl: fakeFetch(200, other) }),
     (e) => e instanceof ModelMismatch && e.cost === 0.0007 && e.model === other.model);

@@ -2,7 +2,7 @@ import { parseJson3 } from './lib/captions.js';
 import { analyzeVideo } from './lib/pipeline.js';
 import { ModelMismatch, AuthError, EXPECTED_MODEL } from './lib/jev.js';
 import { PROMPT_VERSION } from './lib/prompt.js';
-import { spentOn, today, BudgetExceeded } from './lib/budget.js';
+import { spentOn, heldOn, today, BudgetExceeded } from './lib/budget.js';
 import { getEntry, putEntry } from './lib/cache.js';
 import { DEFAULT_SETTINGS } from './lib/settings.js';
 import { createStore } from './lib/store.js';
@@ -22,6 +22,10 @@ const inflight = new Map(); // videoId -> Promise, so tabs/reloads share one pai
 
 const settings = async () => ({ ...DEFAULT_SETTINGS, ...(await store.get('settings', {})) });
 const spentToday = async () => spentOn(await store.get('budget', { entries: [] }), today());
+const spendView = async () => {
+  const l = await store.get('budget', { entries: [] }), d = today(), held = heldOn(l, d);
+  return { spentUsd: spentOn(l, d) - held, heldUsd: held };
+};
 
 // Per-tab state for the popup and tooltip lives in session storage (cleared when the browser closes).
 const tabKey = (tabId) => `tab:${tabId}`;
@@ -36,7 +40,7 @@ function badgeFor(state, paused) {
 async function render(tabId, state, s) {
   const tab = await chrome.tabs.get(tabId).catch(() => null);
   if (!tab) return;
-  const view = summarize({ tab: state, paused: s.paused, spentUsd: await spentToday(), limitUsd: s.dailyLimitUsd, url: tab.url });
+  const view = summarize({ tab: state, paused: s.paused, ...(await spendView()), limitUsd: s.dailyLimitUsd, url: tab.url });
   chrome.action.setBadgeText({ tabId, text: badgeFor(state, s.paused) }).catch(() => {});
   chrome.action.setTitle({ tabId, title: view.title }).catch(() => {});
 }
@@ -105,7 +109,7 @@ async function handleAnalyze({ videoId, json3 }, tabId) {
 async function popupState(tabId) {
   const s = await settings();
   const tab = await chrome.tabs.get(tabId).catch(() => null);
-  const view = summarize({ tab: await getTab(tabId), paused: s.paused, spentUsd: await spentToday(), limitUsd: s.dailyLimitUsd, url: tab && tab.url });
+  const view = summarize({ tab: await getTab(tabId), paused: s.paused, ...(await spendView()), limitUsd: s.dailyLimitUsd, url: tab && tab.url });
   return { ...view, paused: s.paused };
 }
 

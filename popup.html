@@ -11,6 +11,7 @@
   #pause { width: 100%; padding: 9px; border: 0; border-radius: 18px; font: 600 14px system-ui, sans-serif; cursor: pointer; background: #0f0f0f; color: #fff; }
   #pause.paused { background: #065fd4; }
   footer { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: #606060; }
+  #reserve { margin: 4px 0 0; font-size: 11px; color: #909090; }
   a { color: #065fd4; text-decoration: none; cursor: pointer; }
   @media (prefers-color-scheme: dark) {
     body { background: #212121; color: #f1f1f1; }
@@ -28,5 +29,6 @@
 <ul id="items"></ul>
 <button id="pause"></button>
 <footer><span id="spend"></span><a id="options">Настройки</a></footer>
+<p id="reserve" hidden></p>
 <script type="module" src="popup.js"></script>
 </body></html>

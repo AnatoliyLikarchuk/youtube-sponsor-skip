@@ -27,6 +27,13 @@ test('found segments: headline, timestamps and tooltip', () => {
   assert.equal(s.title, 'Sponsor Skip · Найдено 2 рекламные вставки: 7:58–9:03, 21:10–21:40');
 });
 
+test('unconfirmed reservations are shown apart from the real spend', () => {
+  const s = summarize({ ...base, heldUsd: 0.08, tab: tab('ok') });
+  assert.equal(s.spend, 'Сегодня $0.012 из $0.20');
+  assert.equal(s.reserve, '+ $0.080 в резерве: оборвавшиеся запросы, скорее всего бесплатные');
+  assert.equal(summarize({ ...base, tab: tab('ok') }).reserve, '');
+});
+
 test('cached, none found and one found', () => {
   assert.equal(summarize({ ...base, tab: tab('cached', [{ start: 0, end: 20 }]) }).headline, 'Найдена 1 рекламная вставка (из кэша, бесплатно)');
   assert.equal(summarize({ ...base, tab: tab('ok') }).headline, 'Рекламных вставок не найдено');
