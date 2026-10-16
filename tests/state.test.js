@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { reserve, settle, markFailed, spentOn, heldOn, spentByDay, today, BudgetExceeded, RESERVE_USD } from '../lib/budget.js';
+import { reserve, settle, markFailed, spentOn, heldOn, spentByDay, today, reconcile, keyTag, BudgetExceeded, RESERVE_USD } from '../lib/budget.js';
 import { getEntry, putEntry } from '../lib/cache.js';
 
 const day = '2026-10-11';
@@ -61,4 +61,48 @@ test('cache returns entries only for the current version and evicts the oldest',
   assert.deepEqual(getEntry(c, 'v2', 'A').segments, [{ start: 1, end: 9 }]);
   c = putEntry(c, 'v3', { segments: [] }, 'A', 2, 3);
   assert.deepEqual(Object.keys(c).sort(), ['v2', 'v3']);
+});
+
+// Reconciliation against the key's lifetime usage on OpenRouter: entries are tagged with the key they were sent with.
+const T = 'k1', MIN = 60_000;
+function ledgerWith(...specs) {
+  let l = { entries: [] };
+  specs.forEach(([id, outcome, at = 0, tag = T]) => {
+    l = reserve(l, { id, day, limitUsd: 10, keyTag: tag, at });
+    if (typeof outcome === 'number') l = settle(l, id, outcome);
+    if (outcome === 'lost') l = markFailed(l, id, 'Load failed');
+  });
+  return l;
+}
+
+test('reconcile releases lost reservations the key usage does not account for', () => {
+  const l = reconcile(ledgerWith(['a', 0.0006], ['b', 'lost'], ['c', 'lost']), { keyTag: T, usageUsd: 0.0006, now: 20 * MIN });
+  assert.equal(heldOn(l, day), 0);
+  assert.equal(spentOn(l, day), 0.0006);
+  assert.equal(l.entries[1].reconciled, true);
+});
+
+test('reconcile charges lost reservations up to the unexplained usage, oldest first', () => {
+  const l = reconcile(ledgerWith(['a', 0.0006], ['b', 'lost'], ['c', 'lost']), { keyTag: T, usageUsd: 0.0306, now: 20 * MIN });
+  assert.deepEqual(l.entries.map((e) => e.chargedUsd), [0.0006, 0.02, 0.01]);
+  assert.equal(heldOn(l, day), 0);
+});
+
+test('reconcile waits a minute: recent losses, requests in flight, other keys and unknown usage are left alone', () => {
+  const base = ledgerWith(['a', 0.0006], ['b', 'lost', 20 * MIN - 30_000]);
+  assert.deepEqual(reconcile(base, { keyTag: T, usageUsd: 0.0006, now: 20 * MIN }), base); // b is 30 s old
+  assert.equal(heldOn(reconcile(base, { keyTag: T, usageUsd: 0.0006, now: 20 * MIN + 31_000 }), day), 0); // 61 s old
+  const flying = ledgerWith(['a', 'lost'], ['b', 'flight', 20 * MIN - 30_000]);
+  assert.deepEqual(reconcile(flying, { keyTag: T, usageUsd: 0, now: 20 * MIN }), flying);
+  const dead = reconcile(ledgerWith(['a', 'flight']), { keyTag: T, usageUsd: 0, now: 20 * MIN }); // worker died mid-request
+  assert.equal(heldOn(dead, day), 0);
+  const other = ledgerWith(['a', 'lost', 0, 'old']);
+  assert.deepEqual(reconcile(other, { keyTag: T, usageUsd: 0, now: 20 * MIN }), other);
+  assert.deepEqual(reconcile(base, { keyTag: T, usageUsd: null, now: 20 * MIN }), base);
+});
+
+test('keyTag is short, stable and does not contain the key', () => {
+  assert.equal(keyTag('sk-or-v1-abc'), keyTag('sk-or-v1-abc'));
+  assert.notEqual(keyTag('sk-or-v1-abc'), keyTag('sk-or-v1-abd'));
+  assert.match(keyTag('sk-or-v1-abc'), /^[0-9a-f]{8}$/);
 });

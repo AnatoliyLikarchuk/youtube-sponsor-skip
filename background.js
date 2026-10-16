@@ -1,8 +1,8 @@
 import { parseJson3 } from './lib/captions.js';
 import { analyzeVideo } from './lib/pipeline.js';
-import { ModelMismatch, AuthError, EXPECTED_MODEL } from './lib/jev.js';
+import { ModelMismatch, AuthError, EXPECTED_MODEL, fetchKeyUsage } from './lib/jev.js';
 import { PROMPT_VERSION } from './lib/prompt.js';
-import { spentOn, heldOn, today, BudgetExceeded } from './lib/budget.js';
+import { spentOn, heldOn, today, reconcile, keyTag, BudgetExceeded } from './lib/budget.js';
 import { getEntry, putEntry } from './lib/cache.js';
 import { DEFAULT_SETTINGS } from './lib/settings.js';
 import { createStore } from './lib/store.js';
@@ -60,6 +60,17 @@ async function setPaused(paused) {
   return s;
 }
 
+// Lowers lost reservations to what the key's real usage on OpenRouter allows (free request, at most once a minute).
+let lastReconcile = 0;
+async function reconcileBudget(s) {
+  if (!s.key || Date.now() - lastReconcile < 60_000) return;
+  const tag = keyTag(s.key), l = await store.get('budget', { entries: [] });
+  if (reconcile(l, { keyTag: tag, usageUsd: 0, now: Date.now() }) === l) return; // nothing old enough to settle
+  lastReconcile = Date.now();
+  const usageUsd = await fetchKeyUsage(s.key);
+  await store.mutate('budget', { entries: [] }, (cur) => reconcile(cur, { keyTag: tag, usageUsd, now: Date.now() }));
+}
+
 chrome.tabs.onRemoved.addListener((tabId) => { chrome.storage.session.remove(tabKey(tabId)).catch(() => {}); });
 
 async function check(videoId) {
@@ -81,6 +92,7 @@ async function analyze(videoId, json3, s) {
   try {
     const r = await analyzeVideo({ lines, ask: makeAsk({ store, key: s.key, limitUsd: s.dailyLimitUsd }), threshold: s.threshold });
     if (r.complete) await store.mutate('cache', {}, (c) => putEntry(c, videoId, { segments: r.segments }, CACHE_VERSION));
+    reconcileBudget(s).catch(() => {});
     return { status: r.complete ? 'ok' : 'partial', segments: r.segments };
   } catch (e) {
     if (e instanceof ModelMismatch) {
@@ -108,6 +120,7 @@ async function handleAnalyze({ videoId, json3 }, tabId) {
 
 async function popupState(tabId) {
   const s = await settings();
+  reconcileBudget(s).catch(() => {}); // the popup shows the current numbers; the next opening shows the settled ones
   const tab = await chrome.tabs.get(tabId).catch(() => null);
   const view = summarize({ tab: await getTab(tabId), paused: s.paused, ...(await spendView()), limitUsd: s.dailyLimitUsd, url: tab && tab.url });
   return { ...view, paused: s.paused };

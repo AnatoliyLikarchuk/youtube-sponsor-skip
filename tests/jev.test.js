@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildRequests } from '../lib/prompt.js';
-import { callJev, validateAnswers, ModelMismatch, EXPECTED_MODEL, MODEL } from '../lib/jev.js';
+import { callJev, fetchKeyUsage, validateAnswers, ModelMismatch, EXPECTED_MODEL, MODEL } from '../lib/jev.js';
 
 const items = Array.from({ length: 70 }, (_, i) => ({ id: 'c' + String(i).padStart(3, '0'), start: i * 20, end: i * 20 + 20, text: `t${i}` }));
 
@@ -50,4 +50,14 @@ test('callJev throws on HTTP error and on model mismatch with cost', async () =>
   const other = { ...ok, model: 'typesafe/jev-1.14-20261101' };
   await assert.rejects(callJev({ questions }, { key: 'k', fetchImpl: fakeFetch(200, other) }),
     (e) => e instanceof ModelMismatch && e.cost === 0.0007 && e.model === other.model);
+});
+
+test('fetchKeyUsage reads the key lifetime usage, null on any failure', async () => {
+  let seen;
+  const okFetch = async (url, init) => { seen = { url, init }; return { ok: true, status: 200, json: async () => ({ data: { usage: 0.0123 } }) }; };
+  assert.equal(await fetchKeyUsage('sk-or-x', { fetchImpl: okFetch }), 0.0123);
+  assert.equal(seen.url, 'https://openrouter.ai/api/v1/key');
+  assert.equal(seen.init.headers.Authorization, 'Bearer sk-or-x');
+  assert.equal(await fetchKeyUsage('k', { fetchImpl: async () => ({ ok: false, status: 451, json: async () => ({}) }) }), null);
+  assert.equal(await fetchKeyUsage('k', { fetchImpl: async () => { throw new TypeError('Load failed'); } }), null);
 });
